@@ -10,11 +10,20 @@ namespace :sensor_data do
     day    = now.yday
     minute =  ( now.hour * 60 ) + now.min
     
-    response_system = Net::HTTP.get_response("192.168.201.81","/json")
-    data_system     = JSON.parse( response_system.body )
+    tries = 0
+    data_temps = {}
     
-    response_temps  = Net::HTTP.get_response("192.168.201.86","/")
-    data_temps      = JSON.parse( response_temps.body )
+    while tries < 5 && data_temps['backyard_sht15'] == nil do
+      #puts 'trying...'
+      
+      response_system = Net::HTTP.get_response("192.168.201.81","/json")
+      data_system     = JSON.parse( response_system.body )
+    
+      response_temps  = Net::HTTP.get_response("192.168.201.86","/")
+      data_temps      = JSON.parse( response_temps.body )
+      
+      tries += 1
+    end
 
     sensor_reading = SensorReading.new(
       {
