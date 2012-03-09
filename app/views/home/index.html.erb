@@ -1,0 +1,147 @@
+<div id="container" style="height: 500px; min-width: 600px"></div>
+
+<script>
+$(function() {
+    var seriesOptions = [],
+        yAxisOptions = [],
+        names = ['Upstairs', 'Downstairs', 'Outside', 'Vent'],
+        colors = Highcharts.getOptions().colors;
+
+		var data_upstairs   = [];
+		var data_downstairs = [];
+		var data_outside    = [];
+		var data_vent       = [];
+
+        $.getJSON('/sensor_readings.json',    function(data) {
+
+			var start_year    = data[0]['year'];
+			var start_day     = data[0]['day'] - 1;
+			var start_minute  = data[0]['minute'];
+			
+			for( var i in data ){
+			    var this_date = new Date(data[i]['year'], 0); // initialize a date in `year-01-01`
+				this_date.setDate( data[i]['day'] );
+				this_date.setHours( Math.floor( data[i]['minute'] / 60 ) );
+				this_date.setMinutes( data[i]['minute'] - ( this_date.getHours() * 60 ) );
+				console.log( this_date );
+				
+				var x_offset = this_date.getTime();
+				
+				data_upstairs.push(   [x_offset, data[i]['temp_upstairs'] ] );
+				data_downstairs.push( [x_offset, data[i]['temp_downstairs'] ] );
+				data_outside.push(    [x_offset, data[i]['temp_outside'] ] );
+				data_vent.push(       [x_offset, data[i]['temp_vent'] ] );
+			}
+						
+			seriesOptions[0] = { 
+				name: 'Upstairs',
+				data: data_upstairs,
+                tooltip: {
+                    valueDecimals: 1,
+                    valueSuffix: '°F'
+                }
+			};
+			
+			seriesOptions[1] = { 
+				name: 'Downstairs',
+				data: data_downstairs,
+                tooltip: {
+                    valueDecimals: 1,
+                    valueSuffix: '°F'
+                }
+			};
+			
+			seriesOptions[2] = { 
+				name: 'Outside',
+				data: data_outside,
+                tooltip: {
+                    valueDecimals: 1,
+                    valueSuffix: '°F'
+                }
+			};
+			
+			seriesOptions[3] = { 
+				name: 'Vent',
+				data: data_vent,
+                tooltip: {
+                    valueDecimals: 1,
+                    valueSuffix: '°F'
+                }
+			};
+			
+			console.log( seriesOptions );
+			
+			console.profile();
+            createChart();
+			console.profileEnd() ;
+			
+        });
+
+
+    // create the chart when all data is loaded
+    function createChart() {
+
+        chart = new Highcharts.StockChart({
+            chart: {
+                renderTo: 'container'
+            },
+
+			rangeSelector : {
+	            buttons : [{
+	                type : 'hour',
+	                count : 1,
+	                text : '1h'
+	            }, {
+	                type : 'day',
+	                count : 1,
+	                text : '1D'
+	            }, {
+	                type : 'month',
+	                count : 1,
+	                text : '1M'
+	            }, {
+	                type : 'all',
+	                count : 1,
+	                text : 'All'
+	            }],
+	            selected : 0,
+	            inputEnabled : false
+	        },
+
+            yAxis: {
+                labels: {
+                    /*formatter: function() {
+                        return (this.value > 0 ? '+' : '') + this.value + '%';
+                    }*/
+                },
+                plotLines: [{
+                    value: 0,
+                    width: 2,
+                    color: 'silver'
+                }]
+            },
+			
+			xAxis: {
+				min: data_upstairs[0][0],
+				max: data_upstairs[data_upstairs.length - 1][0],
+				minRange: 60000,
+				tickInterval: (3600 * 1000),
+			},
+            
+            plotOptions: {
+                series: {
+                    /*compare: 'percent'*/
+                }
+            },
+            
+            tooltip: {
+                pointFormat: '<span style="color:{series.color}">{series.name}</span>: <b>{point.y}</b><br/>',
+                valueDecimals: 2
+            },
+            
+            series: seriesOptions
+        });
+    }
+
+});
+</script>
