@@ -16,7 +16,7 @@ namespace :sensor_data do
     while tries < 5 && data_temps['backyard_sht15'] == nil do
       #puts 'trying...'
       
-      response_system = Net::HTTP.get_response("192.168.201.81","/json")
+      response_system = Net::HTTP.get_response("192.168.201.82","/json")
       data_system     = JSON.parse( response_system.body )
     
       response_temps  = Net::HTTP.get_response("192.168.201.86","/")
